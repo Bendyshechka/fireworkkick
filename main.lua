@@ -137,7 +137,7 @@ local function StartAutoKick()
 
                                         -- Телепортируем локального игрока и поворачиваем его на -90 градусов
                                         humanoidRootPart:PivotTo(CFrame.new(-824.0519, 298.5387, -1.9000) * CFrame.Angles(0, math.rad(-90), 0))
-                                        targetRootPart:PivotTo(CFrame.new(-818.0519, 298.5387, 0.69000))
+                                        targetRootPart:PivotTo(CFrame.new(-818.0519, 298.5387, -1.9000))
 
                                         task.wait(0.1)
                                         humanoidRootPart.Anchored = true
