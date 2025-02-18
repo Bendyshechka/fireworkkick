@@ -7,7 +7,6 @@ local Window = OrionLib:MakeWindow({Name = "Кикер", HidePremium = false, Sa
 
 local SelectedUsername = ""
 local Exclusions = {"", "", ""} -- Список исключений
-local AutoKickEnabled = false -- Флаг для авто-кика
 local AutoKickRunning = false -- Флаг, чтобы избежать одновременного кика нескольких игроков
 
 -- Вкладка "Главное"
@@ -17,75 +16,57 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
-MainTab:AddTextbox({
+local UsernameBox = MainTab:AddTextbox({
     Name = "Юзернейм:",
     Default = "",
     TextDisappear = false,
     Callback = function(Value)
-        for _, player in ipairs(Players:GetPlayers()) do
-            if string.find(string.lower(player.Name), string.lower(Value), 1, true) == 1 then
-                SelectedUsername = player.Name
-                break
-            end
-        end
+        SelectedUsername = Value
     end
 })
 
 MainTab:AddButton({
     Name = "КИК!",
     Callback = function()
-        local function kickPlayer(targetPlayer)
-            if not targetPlayer then return end
-
-            local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
-            if not leaderstats or leaderstats:FindFirstChild("Glove").Value ~= "Firework" then
-                OrionLib:MakeNotification({
-                    Name = "Ошибка!",
-                    Content = "Нужен экипированный Firework!",
-                    Time = 3
-                })
-                return
-            end
-
-            local character = LocalPlayer.Character
-            local targetCharacter = targetPlayer.Character
-            if not character or not targetCharacter then return end
-
-            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-            local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
-            if not humanoidRootPart or not targetRootPart then return end
-
-            local originalPosition = humanoidRootPart.Position
-            local targetOriginalPosition = targetRootPart.Position
-
-            humanoidRootPart:PivotTo(CFrame.new(-824.0519, 298.5387, -1.9000) * CFrame.Angles(0, math.rad(-90), 0))
-            targetRootPart:PivotTo(CFrame.new(-818.0519, 298.5387, -1.9000))
-
-            task.wait(0.1)
-
-            humanoidRootPart.Anchored = true
-            targetRootPart.Anchored = true
-
-            task.wait(0.3)
-            ReplicatedStorage.GeneralAbility:FireServer()
-
-            task.wait(3)
-            humanoidRootPart.Anchored = false
-            humanoidRootPart:PivotTo(CFrame.new(originalPosition))
-
-            targetRootPart.Anchored = false
-            targetRootPart:PivotTo(CFrame.new(targetOriginalPosition))
-        end
-
         local targetPlayer = Players:FindFirstChild(SelectedUsername)
-        if targetPlayer then
-            kickPlayer(targetPlayer)
-        else
+        if not targetPlayer or targetPlayer == LocalPlayer then return end
+
+        local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
+        if not leaderstats or leaderstats:FindFirstChild("Glove").Value ~= "Firework" then
             OrionLib:MakeNotification({
-                Name = "Ошибка!",
-                Content = "Игрок не найден!",
+                Name = "Ошибка",
+                Content = "Нужен экипированный фейерверк!",
                 Time = 3
             })
+            return
+        end
+
+        local character = LocalPlayer.Character
+        local targetCharacter = targetPlayer.Character
+        if character and targetCharacter then
+            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+            local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+            if humanoidRootPart and targetRootPart then
+                local originalPosition = humanoidRootPart.Position
+                local targetOriginalPosition = targetRootPart.Position
+
+                humanoidRootPart.Position = Vector3.new(-824.0519, 298.5387, -1.9000)
+                targetRootPart.Position = Vector3.new(-818.0519, 298.5387, -1.9000)
+
+                task.wait(0.1)
+                humanoidRootPart.Anchored = true
+                targetRootPart.Anchored = true
+
+                task.wait(0.3)
+                ReplicatedStorage.GeneralAbility:FireServer()
+
+                task.wait(3)
+                humanoidRootPart.Anchored = false
+                humanoidRootPart.Position = originalPosition
+
+                targetRootPart.Anchored = false
+                targetRootPart.Position = targetOriginalPosition
+            end
         end
     end
 })
@@ -99,27 +80,21 @@ fireclickdetector(workspace.Lobby.Ghost.ClickDetector)
 game.ReplicatedStorage.Ghostinvisibilityactivated:FireServer()
 fireclickdetector(workspace.Lobby[OGlove].ClickDetector)
 task.wait(1)
-for i,v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
-if v.Name  ~= "Humanoid" then
-v.Transparency = 0
-end
-end
 else
 OrionLib:MakeNotification({Name = "Ошибка!",Content = "Ты должен быть в лобби и у тебя должно быть больше 666 шлепков",Image = "rbxassetid://7733658504",Time = 5})
 end
   	end    
 })
 
-
 -- Вкладка "Исключения"
-local ExclusionTab = Window:MakeTab({
+local ExclusionsTab = Window:MakeTab({
     Name = "Исключения",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
 for i = 1, 3 do
-    ExclusionTab:AddTextbox({
+    ExclusionsTab:AddTextbox({
         Name = "Исключение #" .. i,
         Default = "",
         TextDisappear = false,
@@ -136,61 +111,100 @@ local ImbaTab = Window:MakeTab({
     PremiumOnly = false
 })
 
-ImbaTab:AddToggle({
-    Name = "Авто-кик всех (по очереди, кроме исключений)",
-    Default = false,
-    Callback = function(Value)
-        AutoKickEnabled = Value
+local function StartAutoKick()
+    if #Players:GetPlayers() > 1 then
+        workspace.Lobby.Firework.ClickDetector.MaxActivationDistance = 1000
+        fireclickdetector(workspace.Lobby.Firework.ClickDetector)
+        task.spawn(function()
+            while true do
+                if AutoKickRunning then
+					return
+                else
+                    AutoKickRunning = true
+                    for _, player in ipairs(Players:GetPlayers()) do
+                        if player ~= LocalPlayer then
+                            local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
+                            if leaderstats and leaderstats:FindFirstChild("Glove").Value == "Firework" then
+                                local character = LocalPlayer.Character
+                                local targetCharacter = player.Character
+                                if character and targetCharacter then
+                                    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                                    local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+                                    if humanoidRootPart and targetRootPart then
+                                        local originalPosition = humanoidRootPart.Position
+                                        local targetOriginalPosition = targetRootPart.CFrame
+                                        local originalCFrame = humanoidRootPart.CFrame
 
-        if AutoKickEnabled then
-            task.spawn(function()
-                while AutoKickEnabled do
-                    if AutoKickRunning then 
-                        task.wait(1) -- Ждём, если кик уже выполняется
-                    else
-                        AutoKickRunning = true
-                        for _, player in ipairs(Players:GetPlayers()) do
-                            if player ~= LocalPlayer and not table.find(Exclusions, player.Name) then
-                                local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
-                                if leaderstats and leaderstats:FindFirstChild("Glove").Value == "Firework" then
-                                    local character = LocalPlayer.Character
-                                    local targetCharacter = player.Character
-                                    if character and targetCharacter then
-                                        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-                                        local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
-                                        if humanoidRootPart and targetRootPart then
-                                            local originalPosition = humanoidRootPart.Position
-                                            local targetOriginalPosition = targetRootPart.Position
+                                        -- Телепортируем локального игрока и поворачиваем его на -90 градусов
+                                        humanoidRootPart:PivotTo(CFrame.new(-824.0519, 298.5387, -1.9000) * CFrame.Angles(0, math.rad(-90), 0))
+                                        targetRootPart:PivotTo(CFrame.new(-818.0519, 298.5387, 0.69000))
 
-                                            humanoidRootPart:PivotTo(CFrame.new(-824.0519, 298.5387, -1.9000) * CFrame.Angles(0, math.rad(-90), 0))
-                                            targetRootPart:PivotTo(CFrame.new(-818.0519, 298.5387, -1.9000))
+                                        task.wait(0.1)
+                                        humanoidRootPart.Anchored = true
+                                        targetRootPart.Anchored = true
 
-                                            task.wait(0.1)
+                                        task.wait(0.3)
+                                        ReplicatedStorage.GeneralAbility:FireServer()
 
-                                            humanoidRootPart.Anchored = true
-                                            targetRootPart.Anchored = true
+                                        task.wait(3)
+                                        humanoidRootPart.Anchored = false
+                                        humanoidRootPart:PivotTo(originalCFrame) -- Возвращаем игрока в исходное положение
 
-                                            task.wait(0.3)
-                                            ReplicatedStorage.GeneralAbility:FireServer()
+                                        targetRootPart.Anchored = false
+                                        targetRootPart:PivotTo(targetOriginalPosition)
 
-                                            task.wait(3)
-                                            humanoidRootPart.Anchored = false
-                                            humanoidRootPart:PivotTo(CFrame.new(originalPosition))
-
-                                            targetRootPart.Anchored = false
-                                            targetRootPart:PivotTo(CFrame.new(targetOriginalPosition))
-
-                                            task.wait(1) -- Немного ждем перед следующим киком
-                                        end
+                                        task.wait(1)
                                     end
                                 end
                             end
                         end
-                        AutoKickRunning = false
                     end
-                    task.wait(2) -- Ждем перед новой проверкой
+                    AutoKickRunning = false
+                end
+                task.wait(2)
+            end
+        end)
+    end
+end
+
+
+ImbaTab:AddToggle({
+    Name = "Авто-кик всех (по очереди, кроме исключений)",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            StartAutoKick()
+        end
+    end
+})
+
+ImbaTab:AddToggle({
+    Name = "Боксёр фарм & Авто-кик",
+    Default = false,
+    Callback = function(Value)
+        if Value then
+            task.spawn(function()
+                while true do
+                    local playersLeft = {}
+
+                    for _, player in ipairs(Players:GetPlayers()) do
+                        if player ~= LocalPlayer and not table.find(Exclusions, player.Name) then
+                            table.insert(playersLeft, player)
+                        end
+                    end
+
+                    if #Players:GetPlayers() > 1 then
+                        StartAutoKick()
+                    elseif #Players:GetPlayers() == 1 then
+                        workspace.Lobby.Boxer.ClickDetector.MaxActivationDistance = 1000
+                        fireclickdetector(workspace.Lobby.Boxer)
+                    end
+
+                    task.wait(1)
                 end
             end)
         end
     end
 })
+
+OrionLib:Init()
