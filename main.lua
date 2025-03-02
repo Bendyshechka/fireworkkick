@@ -3,7 +3,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
-local Window = OrionLib:MakeWindow({Name = "Кикер v1488", HidePremium = false, SaveConfig = false})
+local Window = OrionLib:MakeWindow({Name = "Кикер v52", HidePremium = false, SaveConfig = false})
 
 local SelectedUsername = ""
 local Exclusions = {"", "", ""} -- Список исключений
@@ -148,7 +148,7 @@ local function StartAutoKick()
                                         local targetOriginalCFrame = targetRootPart.CFrame
 
                                         humanoidRootPart:PivotTo(CFrame.new(-824.0519, 298.5387, -1.9000) * CFrame.Angles(0, math.rad(-90), 0))
-                                        targetRootPart:PivotTo(CFrame.new(-818.0519, 298.5387, -1.9000))
+                                        targetRootPart:PivotTo(CFrame.new(-818.0519, 298.5387, -1.9000) * CFrame.Angles(0, math.rad(-90), 0))
 
                                         task.wait(0.1)
                                         humanoidRootPart.Anchored = true
@@ -197,6 +197,8 @@ ImbaTab:AddToggle({
         if Value then
             task.spawn(function()
                 local alreadySwitched = false
+                local boxingLoopRunning = false
+
                 while true do
                     local playersLeft = {}
 
@@ -225,6 +227,9 @@ ImbaTab:AddToggle({
                         end
                         StartAutoKick()
                         alreadySwitched = false
+                        
+                        -- Останавливаем цикл удара боксёром, если он работал
+                        boxingLoopRunning = false
                     elseif #playersLeft == 0 and not alreadySwitched then
                         -- Если остался только я и исключённые игроки, переключаемся на "Боксёр"
                         repeat
@@ -234,6 +239,17 @@ ImbaTab:AddToggle({
                         until LocalPlayer.leaderstats.Glove.Value == "Boxer"
 
                         alreadySwitched = true
+                        
+                        -- Запускаем бесконечный цикл удара, если он ещё не работает
+                        if not boxingLoopRunning then
+                            boxingLoopRunning = true
+                            task.spawn(function()
+                                while boxingLoopRunning do
+                                    game:GetService("ReplicatedStorage").Events.Boxing:FireServer(game.Players.LocalPlayer.Character.HumanoidRootPart)
+                                    task.wait(0.001)
+                                end
+                            end)
+                        end
                     end
 
                     task.wait(1)
@@ -242,6 +258,7 @@ ImbaTab:AddToggle({
         end
     end
 })
+
 
 
 OrionLib:Init()
