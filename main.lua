@@ -3,7 +3,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
-local Window = OrionLib:MakeWindow({Name = "Кикер", HidePremium = false, SaveConfig = false})
+local Window = OrionLib:MakeWindow({Name = "Кикер v1488", HidePremium = false, SaveConfig = false})
 
 local SelectedUsername = ""
 local Exclusions = {"", "", ""} -- Список исключений
@@ -126,36 +126,46 @@ local function StartAutoKick()
         task.spawn(function()
             while AutoKickRunning do
                 for _, player in ipairs(Players:GetPlayers()) do
-                    if player ~= LocalPlayer and not table.find(Exclusions, player.Name) then
-                        local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
-                        if leaderstats and leaderstats:FindFirstChild("Glove").Value == "Firework" then
-                            local character = LocalPlayer.Character
-                            local targetCharacter = player.Character
-                            if character and targetCharacter then
-                                local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-                                local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
-                                if humanoidRootPart and targetRootPart then
-                                    local originalCFrame = humanoidRootPart.CFrame
-                                    local targetOriginalCFrame = targetRootPart.CFrame
+                    if player ~= LocalPlayer then
+                        local isExcluded = false
+                        for _, name in ipairs(Exclusions) do
+                            if string.lower(player.Name) == string.lower(name) then
+                                isExcluded = true
+                                break
+                            end
+                        end
 
-                                    humanoidRootPart:PivotTo(CFrame.new(-824.0519, 298.5387, -1.9000) * CFrame.Angles(0, math.rad(-90), 0))
-                                    targetRootPart:PivotTo(CFrame.new(-818.0519, 298.5387, -1.9000))
+                        if not isExcluded then
+                            local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
+                            if leaderstats and leaderstats:FindFirstChild("Glove").Value == "Firework" then
+                                local character = LocalPlayer.Character
+                                local targetCharacter = player.Character
+                                if character and targetCharacter then
+                                    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                                    local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+                                    if humanoidRootPart and targetRootPart then
+                                        local originalCFrame = humanoidRootPart.CFrame
+                                        local targetOriginalCFrame = targetRootPart.CFrame
 
-                                    task.wait(0.1)
-                                    humanoidRootPart.Anchored = true
-                                    targetRootPart.Anchored = true
+                                        humanoidRootPart:PivotTo(CFrame.new(-824.0519, 298.5387, -1.9000) * CFrame.Angles(0, math.rad(-90), 0))
+                                        targetRootPart:PivotTo(CFrame.new(-818.0519, 298.5387, -1.9000))
 
-                                    task.wait(0.3)
-                                    ReplicatedStorage.GeneralAbility:FireServer()
+                                        task.wait(0.1)
+                                        humanoidRootPart.Anchored = true
+                                        targetRootPart.Anchored = true
 
-                                    task.wait(3)
-                                    humanoidRootPart.Anchored = false
-                                    humanoidRootPart:PivotTo(originalCFrame)
+                                        task.wait(0.3)
+                                        ReplicatedStorage.GeneralAbility:FireServer()
 
-                                    targetRootPart.Anchored = false
-                                    targetRootPart:PivotTo(targetOriginalCFrame)
+                                        task.wait(3)
+                                        humanoidRootPart.Anchored = false
+                                        humanoidRootPart:PivotTo(originalCFrame)
 
-                                    task.wait(2)
+                                        targetRootPart.Anchored = false
+                                        targetRootPart:PivotTo(targetOriginalCFrame)
+
+                                        task.wait(2)
+                                    end
                                 end
                             end
                         end
@@ -166,6 +176,7 @@ local function StartAutoKick()
         end)
     end
 end
+
 
 ImbaTab:AddToggle({
     Name = "Авто-кик всех (по очереди, кроме исключений)",
@@ -190,24 +201,32 @@ ImbaTab:AddToggle({
                     local playersLeft = {}
 
                     for _, player in ipairs(Players:GetPlayers()) do
-                        if player ~= LocalPlayer and not table.find(Exclusions, player.Name) then
+                        local isExcluded = false
+                        for _, name in ipairs(Exclusions) do
+                            if string.lower(player.Name) == string.lower(name) then
+                                isExcluded = true
+                                break
+                            end
+                        end
+
+                        if player ~= LocalPlayer and not isExcluded then
                             table.insert(playersLeft, player)
                         end
                     end
 
                     if #playersLeft > 0 then
-                        -- Если зашёл новый игрок, проверить, что у нас Firework
+                        -- Если есть игроки (кроме исключений), проверяем, что у нас Firework
                         if LocalPlayer.leaderstats.Glove.Value ~= "Firework" then
                             repeat
                                 workspace.Lobby.Firework.ClickDetector.MaxActivationDistance = 1000
                                 fireclickdetector(workspace.Lobby.Firework.ClickDetector)
                                 task.wait(1)
-                            until LocalPlayer.leaderstats.Glove.Value == "Firework" -- Проверяем успешность
+                            until LocalPlayer.leaderstats.Glove.Value == "Firework"
                         end
                         StartAutoKick()
                         alreadySwitched = false
-                    elseif #Players:GetPlayers() == 1 and not alreadySwitched then
-                        -- Если остался один, берём боксёра
+                    elseif #playersLeft == 0 and not alreadySwitched then
+                        -- Если остался только я и исключённые игроки, переключаемся на "Боксёр"
                         repeat
                             workspace.Lobby.Boxer.ClickDetector.MaxActivationDistance = 1000
                             fireclickdetector(workspace.Lobby.Boxer.ClickDetector)
@@ -223,5 +242,6 @@ ImbaTab:AddToggle({
         end
     end
 })
+
 
 OrionLib:Init()
