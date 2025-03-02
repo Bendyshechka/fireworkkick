@@ -72,18 +72,23 @@ MainTab:AddButton({
 })
 
 MainTab:AddButton({
-	Name = "Невидимость😶‍🌫️",
-	Callback = function()
-if game.Players.LocalPlayer.Character:FindFirstChild("entered") == nil and game.Players.LocalPlayer.leaderstats.Slaps.Value >= 666 then
-OGlove = game.Players.LocalPlayer.leaderstats.Glove.Value
-fireclickdetector(workspace.Lobby.Ghost.ClickDetector)
-game.ReplicatedStorage.Ghostinvisibilityactivated:FireServer()
-fireclickdetector(workspace.Lobby[OGlove].ClickDetector)
-task.wait(1)
-else
-OrionLib:MakeNotification({Name = "Ошибка!",Content = "Ты должен быть в лобби и у тебя должно быть больше 666 шлепков",Image = "rbxassetid://7733658504",Time = 5})
-end
-  	end    
+    Name = "Невидимость😶‍🌫️",
+    Callback = function()
+        if game.Players.LocalPlayer.Character:FindFirstChild("entered") == nil and game.Players.LocalPlayer.leaderstats.Slaps.Value >= 666 then
+            OGlove = game.Players.LocalPlayer.leaderstats.Glove.Value
+            fireclickdetector(workspace.Lobby.Ghost.ClickDetector)
+            game.ReplicatedStorage.Ghostinvisibilityactivated:FireServer()
+            fireclickdetector(workspace.Lobby[OGlove].ClickDetector)
+            task.wait(1)
+        else
+            OrionLib:MakeNotification({
+                Name = "Ошибка!",
+                Content = "Ты должен быть в лобби и у тебя должно быть больше 666 шлепков",
+                Image = "rbxassetid://7733658504",
+                Time = 5
+            })
+        end
+    end
 })
 
 -- Вкладка "Исключения"
@@ -112,54 +117,49 @@ local ImbaTab = Window:MakeTab({
 })
 
 local function StartAutoKick()
+    if AutoKickRunning then return end
+    AutoKickRunning = true 
+
     if #Players:GetPlayers() > 1 then
         workspace.Lobby.Firework.ClickDetector.MaxActivationDistance = 1000
         fireclickdetector(workspace.Lobby.Firework.ClickDetector)
         task.spawn(function()
-            while true do
-                if AutoKickRunning then
-					return
-                else
-                    AutoKickRunning = true
-                    for _, player in ipairs(Players:GetPlayers()) do
-                        if player ~= LocalPlayer then
-                            local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
-                            if leaderstats and leaderstats:FindFirstChild("Glove").Value == "Firework" then
-                                local character = LocalPlayer.Character
-                                local targetCharacter = player.Character
-                                if character and targetCharacter then
-                                    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-                                    local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
-                                    if humanoidRootPart and targetRootPart then
-                                        local originalPosition = humanoidRootPart.Position
-                                        local targetOriginalPosition = targetRootPart.CFrame
-                                        local originalCFrame = humanoidRootPart.CFrame
+            while AutoKickRunning do
+                for _, player in ipairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and not table.find(Exclusions, player.Name) then
+                        local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
+                        if leaderstats and leaderstats:FindFirstChild("Glove").Value == "Firework" then
+                            local character = LocalPlayer.Character
+                            local targetCharacter = player.Character
+                            if character and targetCharacter then
+                                local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                                local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
+                                if humanoidRootPart and targetRootPart then
+                                    local originalCFrame = humanoidRootPart.CFrame
+                                    local targetOriginalCFrame = targetRootPart.CFrame
 
-                                        -- Телепортируем локального игрока и поворачиваем его на -90 градусов
-                                        humanoidRootPart:PivotTo(CFrame.new(-824.0519, 298.5387, -1.9000) * CFrame.Angles(0, math.rad(-90), 0))
-                                        targetRootPart:PivotTo(CFrame.new(-818.0519, 298.5387, -1.9000))
+                                    humanoidRootPart:PivotTo(CFrame.new(-824.0519, 298.5387, -1.9000) * CFrame.Angles(0, math.rad(-90), 0))
+                                    targetRootPart:PivotTo(CFrame.new(-818.0519, 298.5387, -1.9000))
 
-                                        task.wait(0.1)
-                                        humanoidRootPart.Anchored = true
-                                        targetRootPart.Anchored = true
+                                    task.wait(0.1)
+                                    humanoidRootPart.Anchored = true
+                                    targetRootPart.Anchored = true
 
-                                        task.wait(0.3)
-                                        ReplicatedStorage.GeneralAbility:FireServer()
+                                    task.wait(0.3)
+                                    ReplicatedStorage.GeneralAbility:FireServer()
 
-                                        task.wait(3)
-                                        humanoidRootPart.Anchored = false
-                                        humanoidRootPart:PivotTo(originalCFrame) -- Возвращаем игрока в исходное положение
+                                    task.wait(3)
+                                    humanoidRootPart.Anchored = false
+                                    humanoidRootPart:PivotTo(originalCFrame)
 
-                                        targetRootPart.Anchored = false
-                                        targetRootPart:PivotTo(targetOriginalPosition)
+                                    targetRootPart.Anchored = false
+                                    targetRootPart:PivotTo(targetOriginalCFrame)
 
-                                        task.wait(1)
-                                    end
+                                    task.wait(2)
                                 end
                             end
                         end
                     end
-                    AutoKickRunning = false
                 end
                 task.wait(2)
             end
@@ -167,13 +167,14 @@ local function StartAutoKick()
     end
 end
 
-
 ImbaTab:AddToggle({
     Name = "Авто-кик всех (по очереди, кроме исключений)",
     Default = false,
     Callback = function(Value)
         if Value then
             StartAutoKick()
+        else
+            AutoKickRunning = false
         end
     end
 })
@@ -184,6 +185,7 @@ ImbaTab:AddToggle({
     Callback = function(Value)
         if Value then
             task.spawn(function()
+                local alreadySwitched = false
                 while true do
                     local playersLeft = {}
 
@@ -193,11 +195,26 @@ ImbaTab:AddToggle({
                         end
                     end
 
-                    if #Players:GetPlayers() > 1 then
+                    if #playersLeft > 0 then
+                        -- Если зашёл новый игрок, проверить, что у нас Firework
+                        if LocalPlayer.leaderstats.Glove.Value ~= "Firework" then
+                            repeat
+                                workspace.Lobby.Firework.ClickDetector.MaxActivationDistance = 1000
+                                fireclickdetector(workspace.Lobby.Firework.ClickDetector)
+                                task.wait(1)
+                            until LocalPlayer.leaderstats.Glove.Value == "Firework" -- Проверяем успешность
+                        end
                         StartAutoKick()
-                    elseif #Players:GetPlayers() == 1 then
-                        workspace.Lobby.Boxer.ClickDetector.MaxActivationDistance = 1000
-                        fireclickdetector(workspace.Lobby.Boxer)
+                        alreadySwitched = false
+                    elseif #Players:GetPlayers() == 1 and not alreadySwitched then
+                        -- Если остался один, берём боксёра
+                        repeat
+                            workspace.Lobby.Boxer.ClickDetector.MaxActivationDistance = 1000
+                            fireclickdetector(workspace.Lobby.Boxer.ClickDetector)
+                            task.wait(1)
+                        until LocalPlayer.leaderstats.Glove.Value == "Boxer"
+
+                        alreadySwitched = true
                     end
 
                     task.wait(1)
