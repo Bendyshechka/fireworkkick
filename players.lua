@@ -1,4 +1,1 @@
-return {
-    "Zbskl69",
-    "slepbatlessigma"
-}
+return ['Zbskl69', 'slepbatlessigma', 'bulba']
