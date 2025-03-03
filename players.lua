@@ -1,1 +1,4 @@
-return ['Zbskl69', 'slepbatlessigma', 'bulba']
+return {
+    "Zbskl69",
+    "slepbatlessigma"
+}
