@@ -3,7 +3,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
-local Window = OrionLib:MakeWindow({Name = "Кикер v666", HidePremium = false, SaveConfig = false})
+local Window = OrionLib:MakeWindow({Name = "Кикер v777", HidePremium = false, SaveConfig = false})
 
 local SelectedUsername = ""
 local Exclusions = {} -- Список исключений
