@@ -3,11 +3,36 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
-local Window = OrionLib:MakeWindow({Name = "Кикер v52", HidePremium = false, SaveConfig = false})
+local Window = OrionLib:MakeWindow({Name = "Кикер v1000-7", HidePremium = false, SaveConfig = false})
 
 local SelectedUsername = ""
-local Exclusions = {"", "", ""} -- Список исключений
+local Exclusions = {} -- Список исключений
 local AutoKickRunning = false -- Флаг, чтобы избежать одновременного кика нескольких игроков
+
+local url = "https://raw.githubusercontent.com/Bendyshechka/fireworkkick/refs/heads/main/players.lua"
+local success, response = pcall(function()
+    return loadstring(game:HttpGet(url))()
+end)
+
+if success then
+    Exclusions = response
+    print("Список исключённых игроков загружен!")
+    for _, player in pairs(Exclusions) do
+        print("Исключённый игрок:", player)
+        OrionLib:MakeNotification({
+            Name = "Загружено исключение",
+            Content = "Игрок " .. player .. " добавлен в исключения",
+            Time = 5
+        })
+    end
+else
+    warn("Ошибка загрузки исключений:", response)
+    OrionLib:MakeNotification({
+        Name = "Ошибка загрузки",
+        Content = "Не удалось загрузить исключённые имена!",
+        Time = 5
+    })
+end
 
 -- Вкладка "Главное"
 local MainTab = Window:MakeTab({
