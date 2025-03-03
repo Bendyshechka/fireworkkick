@@ -1,3 +1,4 @@
 return {
-    "Zbskl69"
+    "Zbskl69",
+    "slepbattlessigma"
 }
