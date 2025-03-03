@@ -1,4 +1,5 @@
 return {
     "slepbattlessigma",
-    "Zbskl69"
+    "Zbskl69",
+    "Sigma"
 }
