@@ -3,7 +3,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
-local Window = OrionLib:MakeWindow({Name = "Кикер v1000-7", HidePremium = false, SaveConfig = false})
+local Window = OrionLib:MakeWindow({Name = "Кикер v666", HidePremium = false, SaveConfig = false})
 
 local SelectedUsername = ""
 local Exclusions = {} -- Список исключений
@@ -76,7 +76,7 @@ MainTab:AddButton({
                 local targetOriginalPosition = targetRootPart.Position
 
                 humanoidRootPart.Position = Vector3.new(-824.0519, 298.5387, -1.9000)
-                targetRootPart.Position = Vector3.new(-818.0519, 299.5387, -1.9000)
+                targetRootPart.Position = Vector3.new(-818.0519, 230.5387, -1)
 
                 task.wait(0.1)
                 humanoidRootPart.Anchored = true
