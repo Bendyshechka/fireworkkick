@@ -75,8 +75,8 @@ MainTab:AddButton({
                 local originalPosition = humanoidRootPart.Position
                 local targetOriginalPosition = targetRootPart.Position
 
-                humanoidRootPart.Position = Vector3.new(-824.0519, 299.5387, -1.9000)
-                targetRootPart.Position = Vector3.new(-818.0519, 298.5387, -1.9000)
+                humanoidRootPart.Position = Vector3.new(-824.0519, 298.5387, -1.9000)
+                targetRootPart.Position = Vector3.new(-818.0519, 299.5387, -1.9000)
 
                 task.wait(0.1)
                 humanoidRootPart.Anchored = true
