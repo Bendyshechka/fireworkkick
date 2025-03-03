@@ -1,3 +1,3 @@
 return {
-    "Zbskl69",
+    "Zbskl69"
 }
