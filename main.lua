@@ -172,8 +172,8 @@ local function StartAutoKick()
                                         local originalCFrame = humanoidRootPart.CFrame
                                         local targetOriginalCFrame = targetRootPart.CFrame
 
-                                        humanoidRootPart:PivotTo(CFrame.new(-822.0519, 298.5387, -1.9000) * CFrame.Angles(0, math.rad(-90), 0))
-                                        targetRootPart:PivotTo(CFrame.new(-818.0519, 298.5387, -1) * CFrame.Angles(0, math.rad(-90), 0))
+                                        humanoidRootPart:PivotTo(CFrame.new(-930.0519, 298.5387, -1.9000) * CFrame.Angles(0, math.rad(-90), 0))
+                                        targetRootPart:PivotTo(CFrame.new(-926.0519, 298.5387, -1) * CFrame.Angles(0, math.rad(-90), 0))
 
                                         task.wait(0.1)
                                         humanoidRootPart.Anchored = true
