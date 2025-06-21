@@ -72,25 +72,25 @@ MainTab:AddButton({
             local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
             local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
             if humanoidRootPart and targetRootPart then
-                local originalPosition = humanoidRootPart.Position
-                local targetOriginalPosition = targetRootPart.Position
+               local originalCFrame = humanoidRootPart.CFrame
+                                        local targetOriginalCFrame = targetRootPart.CFrame
 
-                humanoidRootPart.Position = Vector3.new(-824.0519, 298.5387, -1.9000)
-                targetRootPart.Position = Vector3.new(-818.0519, 231.5387, -1)
+                                        humanoidRootPart:PivotTo(CFrame.new(-930.0519, 298.5387, -1.9000) * CFrame.Angles(0, math.rad(-90), 0))
+                                        targetRootPart:PivotTo(CFrame.new(-926.0519, 298.5387, -1) * CFrame.Angles(0, math.rad(-90), 0))
 
-                task.wait(0.1)
-                humanoidRootPart.Anchored = true
-                targetRootPart.Anchored = true
+                                        task.wait(0.1)
+                                        humanoidRootPart.Anchored = true
+                                        targetRootPart.Anchored = true
 
-                task.wait(0.3)
-                ReplicatedStorage.GeneralAbility:FireServer()
+                                        task.wait(0.3)
+                                        ReplicatedStorage.GeneralAbility:FireServer()
 
-                task.wait(3)
-                humanoidRootPart.Anchored = false
-                humanoidRootPart.Position = originalPosition
+                                        task.wait(3)
+                                        humanoidRootPart.Anchored = false
+                                        humanoidRootPart:PivotTo(originalCFrame)
 
-                targetRootPart.Anchored = false
-                targetRootPart.Position = targetOriginalPosition
+                                        targetRootPart.Anchored = false
+                                        targetRootPart:PivotTo(targetOriginalCFrame)
             end
         end
     end
