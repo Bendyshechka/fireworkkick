@@ -1,114 +1,84 @@
+
+
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/Articles-Hub/ROBLOXScript/refs/heads/main/Library/Orion/Source.lua')))()
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local LocalPlayer = Players.LocalPlayer
+local Window = OrionLib:MakeWindow({IntroText = "Slap Battles 👏", IntroIcon = "rbxassetid://15315284749",Name = ("ZybasHub - Slap Battles 👏".." | ".. identifyexecutor()),IntroToggleIcon = "rbxassetid://7734091286", HidePremium = false, SaveConfig = false, IntroEnabled = true, ConfigFolder = "slap battles"})
 
-local Window = OrionLib:MakeWindow({Name = "Кикер v767", HidePremium = false, SaveConfig = false})
-
-local SelectedUsername = ""
-local Exclusions = {} -- Список исключений
-local AutoKickRunning = false -- Флаг, чтобы избежать одновременного кика нескольких игроков
-
-local url = "https://raw.githubusercontent.com/Bendyshechka/fireworkkick/refs/heads/main/players.lua"
-local success, response = pcall(function()
-    return loadstring(game:HttpGet(url))()
-end)
-
-if success then
-    Exclusions = response
-    print("Список исключённых игроков загружен!")
-    for _, player in pairs(Exclusions) do
-        print("Исключённый игрок:", player)
-        OrionLib:MakeNotification({
-            Name = "Загружено исключение",
-            Content = "Игрок " .. player .. " добавлен в исключения",
-            Time = 5
-        })
-    end
-else
-    warn("Ошибка загрузки исключений:", response)
-    OrionLib:MakeNotification({
-        Name = "Ошибка загрузки",
-        Content = "Не удалось загрузить исключённые имена!",
-        Time = 5
-    })
+local function EquipGlove(Glove)
+	for i, v in pairs(game:GetService("ReplicatedStorage")._NETWORK:GetChildren()) do
+      -- Check if the name contains the character '{'
+      if v.Name:find("{") then
+          local args = {
+              [1] = Glove,
+			  [2] = true
+          }
+  
+          -- Check if v is a RemoteEvent and can FireServer
+          if v:IsA("RemoteEvent") then
+              v:FireServer(unpack(args))
+          elseif v:IsA("RemoteFunction") then
+              -- If it's a RemoteFunction, use InvokeServer
+              local result = v:InvokeServer(unpack(args))
+              print("Result from InvokeServer:", result)  -- Optional: Print the result
+          else
+              print("v is neither a RemoteEvent nor a RemoteFunction.")
+          end
+      end
+  end
 end
 
--- Вкладка "Главное"
-local MainTab = Window:MakeTab({
-    Name = "Главное",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
+
+local Tab = Window:MakeTab({
+	Name = "Информация",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
 })
 
-local UsernameBox = MainTab:AddTextbox({
-    Name = "Юзернейм:",
-    Default = "",
+Tab:AddLabel("Новый лучший скрипт!")
+Tab:AddLabel("Милена шлюха")
+
+Tab:AddButton({
+	Name = "Закрыть меню",
+	Callback = function()
+      		OrionLib:Destroy()
+  	end    
+})
+local Tab1 = Window:MakeTab({
+	Name = "Перчи без бейджа",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+local Section = Tab1:AddSection({
+	Name = "Одиночные"
+})
+Tab1:AddTextbox({
+    Name = "Перчатка: ",
+    Default = "Glove",
     TextDisappear = false,
     Callback = function(Value)
-        SelectedUsername = Value
-    end
-})
+        local targetAbbreviation = Value
+        local GlovesDatabase = require(game.ReplicatedStorage.FRONTEND.Databases.Gloves) -- Загружаем базу данных перчаток
+        foundGlove = nil
 
-MainTab:AddButton({
-    Name = "КИК!",
-    Callback = function()
-        local targetPlayer = Players:FindFirstChild(SelectedUsername)
-        if not targetPlayer or targetPlayer == LocalPlayer then return end
-
-        local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
-        if not leaderstats or leaderstats:FindFirstChild("Glove").Value ~= "Firework" then
-            OrionLib:MakeNotification({
-                Name = "Ошибка",
-                Content = "Нужен экипированный фейерверк!",
-                Time = 3
-            })
-            return
-        end
-
-        local character = LocalPlayer.Character
-        local targetCharacter = targetPlayer.Character
-        if character and targetCharacter then
-            local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-            local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
-            if humanoidRootPart and targetRootPart then
-               local originalCFrame = humanoidRootPart.CFrame
-                                        local targetOriginalCFrame = targetRootPart.CFrame
-
-                                        humanoidRootPart:PivotTo(CFrame.new(-930.0519, 298.5387, -1.9000) * CFrame.Angles(0, math.rad(-90), 0))
-                                        targetRootPart:PivotTo(CFrame.new(-926.0519, 298.5387, -1) * CFrame.Angles(0, math.rad(-90), 0))
-
-                                        task.wait(0.1)
-                                        humanoidRootPart.Anchored = true
-                                        targetRootPart.Anchored = true
-
-                                        task.wait(0.3)
-                                        ReplicatedStorage.GeneralAbility:FireServer()
-
-                                        task.wait(3)
-                                        humanoidRootPart.Anchored = false
-                                        humanoidRootPart:PivotTo(originalCFrame)
-
-                                        targetRootPart.Anchored = false
-                                        targetRootPart:PivotTo(targetOriginalCFrame)
+        for gloveName, gloveData in pairs(GlovesDatabase) do
+            -- Проверяем, что AbilityType подходит и имя перчатки начинается с введённого текста
+            if (gloveData.Type == "Badge") and
+               string.sub(gloveName, 1, #targetAbbreviation):lower() == targetAbbreviation:lower() then
+                foundGlove = gloveName
+                break
             end
         end
-    end
-})
 
-MainTab:AddButton({
-    Name = "Невидимость😶‍🌫️",
-    Callback = function()
-        if game.Players.LocalPlayer.Character:FindFirstChild("entered") == nil and game.Players.LocalPlayer.leaderstats.Slaps.Value >= 666 then
-            OGlove = game.Players.LocalPlayer.leaderstats.Glove.Value
-            fireclickdetector(workspace.Lobby.Ghost.ClickDetector)
-            game.ReplicatedStorage.Ghostinvisibilityactivated:FireServer()
-            fireclickdetector(workspace.Lobby[OGlove].ClickDetector)
-            task.wait(1)
+        if foundGlove then
+            OrionLib:MakeNotification({
+                Name = "Успешно",
+                Content = "Найдена перчатка: " .. foundGlove,
+                Image = "rbxassetid://7733658504",
+                Time = 5
+            })
         else
             OrionLib:MakeNotification({
-                Name = "Ошибка!",
-                Content = "Ты должен быть в лобби и у тебя должно быть больше 666 шлепков",
+                Name = "Ошибка",
+                Content = "Перчатка не найдена!",
                 Image = "rbxassetid://7733658504",
                 Time = 5
             })
@@ -116,174 +86,104 @@ MainTab:AddButton({
     end
 })
 
--- Вкладка "Исключения"
-local ExclusionsTab = Window:MakeTab({
-    Name = "Исключения",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
+Tab1:AddButton({
+	Name = "Выдать перчатку",
+	Callback = function()
+      		EquipGlove(foundGlove)
+  	end    
 })
-
-for i = 1, 3 do
-    ExclusionsTab:AddTextbox({
-        Name = "Исключение #" .. i,
-        Default = "",
-        TextDisappear = false,
-        Callback = function(Value)
-            Exclusions[i] = Value
-        end
-    })
-end
-
--- Вкладка "ИМБА"
-local ImbaTab = Window:MakeTab({
-    Name = "ИМБА",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
+local Section1 = Tab1:AddSection({
+	Name = "Все"
 })
-
-local function StartAutoKick()
-    if AutoKickRunning then return end
-    AutoKickRunning = true 
-
-    if #Players:GetPlayers() > 1 then
-        workspace.Lobby.Firework.ClickDetector.MaxActivationDistance = 1000
-        fireclickdetector(workspace.Lobby.Firework.ClickDetector)
-        task.spawn(function()
-            while AutoKickRunning do
-                for _, player in ipairs(Players:GetPlayers()) do
-                    if player ~= LocalPlayer then
-                        local isExcluded = false
-                        for _, name in ipairs(Exclusions) do
-                            if string.lower(player.Name) == string.lower(name) then
-                                isExcluded = true
-                                break
-                            end
-                        end
-
-                        if not isExcluded then
-                            local leaderstats = LocalPlayer:FindFirstChild("leaderstats")
-                            if leaderstats and leaderstats:FindFirstChild("Glove").Value == "Firework" then
-                                local character = LocalPlayer.Character
-                                local targetCharacter = player.Character
-                                if character and targetCharacter then
-                                    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
-                                    local targetRootPart = targetCharacter:FindFirstChild("HumanoidRootPart")
-                                    if humanoidRootPart and targetRootPart then
-                                        local originalCFrame = humanoidRootPart.CFrame
-                                        local targetOriginalCFrame = targetRootPart.CFrame
-
-                                        humanoidRootPart:PivotTo(CFrame.new(-930.0519, 298.5387, -1.9000) * CFrame.Angles(0, math.rad(-90), 0))
-                                        targetRootPart:PivotTo(CFrame.new(-926.0519, 298.5387, -1) * CFrame.Angles(0, math.rad(-90), 0))
-
-                                        task.wait(0.1)
-                                        humanoidRootPart.Anchored = true
-                                        targetRootPart.Anchored = true
-
-                                        task.wait(0.3)
-                                        ReplicatedStorage.GeneralAbility:FireServer()
-
-                                        task.wait(3)
-                                        humanoidRootPart.Anchored = false
-                                        humanoidRootPart:PivotTo(originalCFrame)
-
-                                        targetRootPart.Anchored = false
-                                        targetRootPart:PivotTo(targetOriginalCFrame)
-
-                                        task.wait(2)
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-                task.wait(2)
+Tab1:AddButton({
+	Name = "Выдать все бейдж перчатки",
+	Callback = function()
+      	local GlovesDatabase1 = require(game.ReplicatedStorage.FRONTEND.Databases.Gloves)
+		for gloveName1, gloveData1 in pairs(GlovesDatabase1) do
+            -- Проверяем, что AbilityType подходит и имя перчатки начинается с введённого текста
+            if gloveData1.Type == "Badge" then
+               EquipGlove(gloveName1)
             end
-        end)
-    end
+        end
+  	end    
+})
+
+local Tab2 = Window:MakeTab({
+	Name = "Феерверк кик",
+	Icon = "rbxassetid://4483345998",
+	PremiumOnly = false
+})
+local Section2 = Tab2:AddSection({
+	Name = "Одиночный кик"
+})
+
+Tab2:AddTextbox({
+	Name = "Юзернейм: ",
+	Default = "Username",
+	TextDisappear = false,
+	Callback = function(Value)
+local targetAbbreviation = Value
+local targetPlayer
+for _, v in pairs(game.Players:GetPlayers()) do
+if string.sub(v.Name, 1, #targetAbbreviation):lower() == targetAbbreviation:lower() then
+targetPlayer = v
+break
 end
+end
+if targetPlayer then
+PlayerKickFirework = targetPlayer.Name
+OrionLib:MakeNotification({Name = "Успешно",Content = "Найден игрок [ "..PlayerKickFirework.." ]",Image = "rbxassetid://7733658504",Time = 5})
+else
+OrionLib:MakeNotification({Name = "Ошибка",Content = "Игрок не найден",Image = "rbxassetid://7733658504",Time = 5})
+end
+	end	  
+})
+local AlreadyKicking = false
+Tab2:AddButton({
+	Name = "Кикнуть игрока",
+	Callback = function()
+      	if game.Players.LocalPlayer.leaderstats.Glove.Value == "Firework" then
+			if game.Players:FindFirstChild(PlayerKickFirework) ~= nil then
+			if AlreadyKicking == false then
+				AlreadyKicking = true
+				local portal = workspace.Lobby.brazil.portal
+				portal.CanTouch = false
+
+				local character = game.Players.LocalPlayer.Character
+				local targetcharacter = game.Players:FindFirstChild(PlayerKickFirework).Character
+				local targethrp = targetcharacter:FindFirstChild("HumanoidRootPart")
+				local hrp = character:FindFirstChild("HumanoidRootPart")
+				local originalhrp = hrp.CFrame
+				local originaltargethrp = targethrp.CFrame
 
 
-ImbaTab:AddToggle({
-    Name = "Авто-кик всех (по очереди, кроме исключений)",
-    Default = false,
-    Callback = function(Value)
-        if Value then
-            StartAutoKick()
-        else
-            AutoKickRunning = false
-        end
-    end
+				task.spawn(function()
+					hrp.CFrame = CFrame.new(portal.Position + Vector3.new(-5, -5, 0)) * CFrame.Angles(0, math.rad(-86.581), 0)
+					wait(0.1)
+					hrp.Anchored = true
+				end)
+				task.spawn(function()
+					targethrp.CFrame = CFrame.new(portal.Position + Vector3.new(3, -5, 0)) * CFrame.Angles(0, math.rad(-86.581), 0)
+					wait(0.1)
+					targethrp.Anchored = true
+				end)
+				task.wait(0.3)
+                game.ReplicatedStorage.GeneralAbility:FireServer()
+				wait(3)
+				hrp.Anchored = false
+				targethrp.Anchored = false
+				hrp.CFrame = originalhrp
+				targethrp.CFrame = originaltargethrp
+				AlreadyKicking = false
+			else
+				OrionLib:MakeNotification({Name = "Ошибка",Content = "Вы уже в процессе кика",Image = "rbxassetid://7733658504",Time = 5})
+			end  
+		else
+			OrionLib:MakeNotification({Name = "Ошибка",Content = "Игрока нет на сервере",Image = "rbxassetid://7733658504",Time = 5})
+		end
+		else
+			OrionLib:MakeNotification({Name = "Ошибка",Content = "У вас должен быть экипирован феерверк",Image = "rbxassetid://7733658504",Time = 5})
+		end
+  	end    
 })
 
-ImbaTab:AddToggle({
-    Name = "Боксёр фарм & Авто-кик",
-    Default = false,
-    Callback = function(Value)
-        if Value then
-            task.spawn(function()
-                local alreadySwitched = false
-                local boxingLoopRunning = false
-
-                while true do
-                    local playersLeft = {}
-
-                    for _, player in ipairs(Players:GetPlayers()) do
-                        local isExcluded = false
-                        for _, name in ipairs(Exclusions) do
-                            if string.lower(player.Name) == string.lower(name) then
-                                isExcluded = true
-                                break
-                            end
-                        end
-
-                        if player ~= LocalPlayer and not isExcluded then
-                            table.insert(playersLeft, player)
-                        end
-                    end
-
-                    if #playersLeft > 0 then
-                        -- Если есть игроки (кроме исключений), проверяем, что у нас Firework
-                        if LocalPlayer.leaderstats.Glove.Value ~= "Firework" then
-                            repeat
-                                workspace.Lobby.Firework.ClickDetector.MaxActivationDistance = 1000
-                                fireclickdetector(workspace.Lobby.Firework.ClickDetector)
-                                task.wait(1)
-                            until LocalPlayer.leaderstats.Glove.Value == "Firework"
-                        end
-                        StartAutoKick()
-                        alreadySwitched = false
-                        
-                        -- Останавливаем цикл удара боксёром, если он работал
-                        boxingLoopRunning = false
-                    elseif #playersLeft == 0 and not alreadySwitched then
-                        -- Если остался только я и исключённые игроки, переключаемся на "Боксёр"
-                        repeat
-                            workspace.Lobby.Boxer.ClickDetector.MaxActivationDistance = 1000
-                            fireclickdetector(workspace.Lobby.Boxer.ClickDetector)
-                            task.wait(1)
-                        until LocalPlayer.leaderstats.Glove.Value == "Boxer"
-
-                        alreadySwitched = true
-                        
-                        -- Запускаем бесконечный цикл удара, если он ещё не работает
-                        if not boxingLoopRunning then
-                            boxingLoopRunning = true
-                            task.spawn(function()
-                                while boxingLoopRunning do
-                                    game:GetService("ReplicatedStorage").Events.Boxing:FireServer(game.Players.LocalPlayer.Character.HumanoidRootPart)
-                                    task.wait(0.001)
-                                end
-                            end)
-                        end
-                    end
-
-                    task.wait(1)
-                end
-            end)
-        end
-    end
-})
-
-
-
-OrionLib:Init()
